@@ -333,3 +333,2683 @@
           <span class="text-[10px] text-emerald-400 font-medium">↑ Progressive</span>
         </div>
         <div class="bg-slate-900 border border-slate-800 round
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>HybridFlow • Strength, Garmin & AI Coach</title>
+
+  <!-- PWA Full-Screen Meta Tags for iOS & Android -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HybridFlow" />
+  <meta name="application-name" content="HybridFlow" />
+  <meta name="theme-color" content="#090d16" />
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" />
+  <link id="pwaManifestLink" rel="manifest" href="" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS v2 CDN for Multi-User Auth & Cloud Sync -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#131c2e',
+              950: '#070b14',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #070b14;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-glow {
+      animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
+
+  <!-- App Container -->
+  <div id="app" class="w-full max-w-lg min-h-screen bg-slate-900/60 border-x border-slate-800/80 flex flex-col justify-between pb-36 relative shadow-2xl">
+
+    <header class="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 px-4 pt-3 pb-3">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <i data-lucide="activity" class="w-5 h-5 text-slate-950 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-extrabold text-base tracking-tight text-white">HYBRID<span class="text-emerald-400">FLOW</span></h1>
+              <span id="cloudStatusPill" class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold">PWA Ready</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span id="garminStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <p id="garminSyncBadge" class="text-[11px] text-slate-400 font-mono truncate max-w-[170px]">Garmin Synced • Today 07:15</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Right Controls: User Profile / Auth, PWA Install Guide, Garmin Sync -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="openAuthModal()" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 transition border border-emerald-500/40 text-xs font-bold text-emerald-300" title="Account, Friend Switcher & Supabase Cloud">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span id="headerUserBadge" class="max-w-[78px] truncate">You</span>
+          </button>
+
+          <button onclick="openPwaGuideModal()" class="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 transition border border-slate-700/80 text-slate-300 hover:text-white" title="Install App & Cloud Setup Guide">
+            <i data-lucide="smartphone" class="w-4 h-4 text-sky-400"></i>
+          </button>
+
+          <button onclick="syncGarmin()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 transition border border-slate-700/80 text-xs font-semibold text-slate-200" title="Sync Garmin & Cloud">
+            <i id="syncIcon" data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400 transition-transform duration-500"></i>
+            <span id="syncText" class="hidden sm:inline">Sync</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi-User Instant Switcher Bar (Demonstrates Isolated Profiles & Cloud State) -->
+      <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800/90 rounded-xl px-2.5 py-1.5 mb-2.5 text-[11px]">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+          <span class="text-slate-400">Profile:</span>
+          <strong id="activeProfileLabel" class="text-white truncate">You (Owner)</strong>
+          <span id="syncModeTag" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">Local Isolated</span>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button id="btnSwitchOwner" onclick="switchLocalProfile('owner')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 transition">
+            You
+          </button>
+          <button id="btnSwitchFriend" onclick="switchLocalProfile('friend')" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">
+            Friend Demo
+          </button>
+          <button onclick="openAuthModal()" class="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-indigo-300 hover:text-indigo-200 underline">
+            Cloud Login
+          </button>
+        </div>
+      </div>
+
+      <!-- Primary Navigation Tabs -->
+      <div class="grid grid-cols-3 gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button id="navDashboard" onclick="navigateTo('dashboard')" class="py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow">
+          <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+          Dashboard
+        </button>
+        <button id="navWorkout" onclick="navigateTo('workout')" class="py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-white relative">
+          <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
+          <span>Workout</span>
+          <span id="activeWorkoutDot" class="hidden w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        </button>
+        <button id="navAnalytics" onclick="navigateTo('analytics')" class="py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-white">
+          <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+          Analytics
+        </button>
+      </div>
+    </header>
+
+    <main id="viewDashboard" class="flex-1 px-4 pt-4 space-y-5">
+
+      <!-- Garmin Readiness & Biometrics Strip (4 Cards) -->
+      <section>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Garmin Connect Biometrics</span>
+          <button onclick="openRunModal()" class="text-[11px] font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1">
+            + Log Threshold Run
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- Card 1: Overnight HRV -->
+          <div class="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3 flex items-start justify-between">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">Overnight HRV</span>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <span id="metricHrv" class="font-mono font-extrabold text-lg text-emerald-400">68 ms</span>
+                <span id="metricHrvStatus" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold">Balanced</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">7d Baseline: 64–71 ms</p>
+            </div>
+            <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+              <i data-lucide="heart-pulse" class="w-4 h-4"></i>
+            </div>
+          </div>
+
+          <!-- Card 2: Training Readiness -->
+          <div class="bg-slate-900/95 border border-slate-800/90 rounded-2xl p-3 flex items-start justify-between">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold block">Readiness</span>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <span id="metricReadiness" class="font-mono font-extrabold text-lg text-sky-400">82<span class="text-xs text-slate-400">/100</span></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-semibold">High</span>
+              </div>
+              <p id="metricRhr" class="text-[10px] text-slate-400 mt-1">RHR: 48 bpm • Sleep: 84</p>
+            </div>
+            <div class="p-2 rounded-xl bg-sky-500/10 text-sky-400">
+              <i data-lucide="battery-charging" class="w-4 h-4"></i>
+            </div>
+          </div>
+
+          <!-- Card 3: 7-Day Running Load & Threshold HR -->
+          <div class="col-span-2 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold">
+                🏃‍♂️
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-white">7-Day Running Load: <span id="metricRunKm" class="text-amber-300 font-mono">34.5 km</span></span>
+                </div>
+                <p class="text-[11px] text-slate-300 mt-0.5">
+                  Threshold HR (Z4/Z5): <span id="metricRunZ4" class="font-mono font-bold text-amber-400">42 mins</span> • Last: 8.4 km @ 4:35/km
+                </p>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono uppercase px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">Load Optimal</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/40 rounded-3xl p-4 shadow-xl space-y-3">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h2 class="text-sm font-extrabold text-white">AI Performance & Mobility Coach</h2>
+                <span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Gemini 3 Flash</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Readiness briefings + custom rehab/mobility workout generator</p>
+            </div>
+          </div>
+
+          <button id="btnGenerateBriefing" onclick="generateAiBriefing()" class="px-3 py-1.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 active:scale-95 text-slate-950 font-extrabold text-xs transition shadow-md shadow-indigo-500/20 flex items-center gap-1 flex-shrink-0">
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span>Daily Briefing</span>
+          </button>
+        </div>
+
+        <!-- Quick-Tap Prompt Chips for Instant Testing -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button onclick="generateAiAdaptiveWorkout('I have some problem with my back, what can I workout if I need to release tension in the hips so I don\'t have that office body')"
+            class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1 active:scale-95">
+            <span>🧘‍♂️ Desk / Hip & Back Relief</span>
+          </button>
+          <button onclick="generateAiAdaptiveWorkout('Build a low-back friendly strength workout that builds glutes, core stability, and upper body without axial spinal loading')"
+            class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1 active:scale-95">
+            <span>🛡️ Low Back Friendly Strength</span>
+          </button>
+          <button onclick="generateAiBriefing()"
+            class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-semibold whitespace-nowrap transition active:scale-95">
+            <span>📊 Check +2.5kg Overload</span>
+          </button>
+        </div>
+
+        <!-- AI Response Output Box -->
+        <div id="aiCoachOutput" class="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-3 text-xs text-slate-200 leading-relaxed space-y-2">
+          <p class="text-indigo-300 font-semibold">Ask for a custom routine or tap a quick-chip above:</p>
+          <p class="text-slate-300">Tell the AI Coach how your body feels (e.g., <em>"My lower back is tight from sitting—build a hip decompression & glute activation workout"</em>) and it will generate an interactive routine you can start or save in one tap.</p>
+        </div>
+
+        <!-- Custom Prompt Input -->
+        <div class="flex items-center gap-2">
+          <input id="aiCustomPrompt" type="text" placeholder="e.g., Back tight from office sitting, release hip tension..." 
+            onkeydown="if(event.key==='Enter') askAiCoachCustom()"
+            class="flex-1 bg-slate-950/90 border border-slate-800 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none" />
+          <button onclick="askAiCoachCustom()" class="px-3 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 text-xs font-extrabold transition whitespace-nowrap">
+            Build / Ask
+          </button>
+        </div>
+      </section>
+
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-extrabold text-white tracking-tight">Choose Your Session</h2>
+            <p class="text-[11px] text-slate-400">Select a saved routine (auto-prefills last weights) or build new</p>
+          </div>
+          <button onclick="openTemplateBuilderModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition flex items-center gap-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            New Routine
+          </button>
+        </div>
+
+        <!-- Saved Templates Container -->
+        <div id="savedTemplatesList" class="space-y-3"></div>
+
+        <!-- Quick Empty Custom Workout Button -->
+        <button onclick="startEmptyCustomWorkout()" class="w-full py-3.5 rounded-2xl border border-dashed border-slate-700 hover:border-emerald-500/60 bg-slate-900/40 hover:bg-slate-900 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-[0.99]">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+          Start Blank / On-the-Fly Workout
+        </button>
+      </section>
+    </main>
+
+    <main id="viewWorkout" class="hidden flex-1 px-4 pt-4 space-y-4">
+      
+      <!-- Top Bar: Back to Dashboard & Live Timer -->
+      <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-3">
+        <button onclick="navigateTo('dashboard')" class="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white bg-slate-800/90 px-2.5 py-1.5 rounded-xl border border-slate-700">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          Dashboard
+        </button>
+
+        <div class="text-center">
+          <input id="activeWorkoutTitle" type="text" value="Lower Body & Core" class="bg-transparent font-extrabold text-sm text-white text-center focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1" />
+          <div class="flex items-center justify-center gap-2 text-[11px] font-mono text-emerald-400">
+            <span id="workoutElapsedDisplay">00:00</span>
+            <span class="text-slate-600">•</span>
+            <span id="activeTonnageDisplay">0 kg vol</span>
+          </div>
+        </div>
+
+        <button onclick="openAddExerciseToActiveModal()" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1.5 rounded-xl">
+          + Exercise
+        </button>
+      </div>
+
+      <!-- Active Exercise Cards List -->
+      <div id="activeExercisesContainer" class="space-y-4"></div>
+
+      <!-- Bottom Session Controls -->
+      <div class="pt-2 pb-6 space-y-3">
+        <button onclick="openAddExerciseToActiveModal()" class="w-full py-3 rounded-2xl border border-dashed border-slate-700 hover:border-emerald-500/50 bg-slate-900/50 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition">
+          <i data-lucide="plus" class="w-4 h-4 text-emerald-400"></i>
+          Add Another Exercise to Session
+        </button>
+
+        <button onclick="finishAndAnalyzeWorkout()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-[0.99]">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          Finish Workout & Run AI Effort Analysis
+        </button>
+      </div>
+    </main>
+
+    <main id="viewAnalytics" class="hidden flex-1 px-4 pt-4 space-y-5">
+      
+      <div class="grid grid-cols-3 gap-2.5">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+          <span class="text-[10px] uppercase text-slate-400 font-semibold block">Weekly Tonnage</span>
+          <span id="analyticsWeeklyTonnage" class="font-mono text-base font-extrabold text-white mt-1 block">14,850 kg</span>
+          <span class="text-[10px] text-emerald-400 font-medium">↑ Progressive</span>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+          <span class="text-[10px] uppercase text-slate-400 font-semibold block">Z4/Z5 Threshold</span>
+          <span id="analyticsThresholdMins" class="font-mono text-base font-extrabold text-amber-400 mt-1 block">42 mins</span>
+          <span class="text-[10px] text-slate-400 font-medium">34.5 km total</span>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+          <span class="text-[10px] uppercase text-slate-400 font-semibold block">Workouts Logged</span>
+          <span id="analyticsSessionsCount" class="font-mono text-base font-extrabold text-indigo-400 mt-1 block">4</span>
+          <span class="text-[10px] text-emerald-400 font-medium">Hybrid Streak</span>
+        </div>
+      </div>
+
+      <!-- Chart 1: Strength Tonnage vs Garmin Z4/Z5 Minutes -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Weekly Tonnage vs. Threshold HR</h3>
+            <p class="text-[11px] text-slate-400">Strength Volume (kg) vs. Garmin Zone 4/5 Time (mins)</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">Hybrid Load</span>
+        </div>
+        <div class="h-52 w-full">
+          <canvas id="chartHybrid"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Estimated 1RM Progression -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Estimated 1RM Progression</h3>
+            <p class="text-[11px] text-slate-400">Epley Formula: <span class="font-mono">Weight × (1 + Reps/30)</span></p>
+          </div>
+          <select id="select1RMExercise" onchange="render1RMChart()" class="bg-slate-800 text-xs font-semibold text-emerald-400 border border-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none">
+            <option value="Barbell Back Squat">Barbell Back Squat</option>
+            <option value="Bench Press">Bench Press</option>
+            <option value="Romanian Deadlift">Romanian Deadlift</option>
+            <option value="Trap Bar Deadlift">Trap Bar Deadlift</option>
+          </select>
+        </div>
+        <div class="h-48 w-full">
+          <canvas id="chart1RM"></canvas>
+        </div>
+      </div>
+
+      <!-- Completed Sessions History Log -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-white">Recent Hybrid History</h3>
+          <button onclick="resetAllStorage()" class="text-[11px] text-slate-400 hover:text-rose-400">Reset Demo Data</button>
+        </div>
+        <div id="completedHistoryList" class="space-y-2.5"></div>
+      </div>
+    </main>
+
+    <div id="restTimerBar" class="fixed bottom-3 left-1/2 -translate-x-1/2 w-[94%] max-w-md z-40 bg-slate-900/95 backdrop-blur-xl border border-emerald-500/60 rounded-2xl p-3 shadow-2xl shadow-black/90 transition-all duration-300 translate-y-44 opacity-0 pointer-events-none">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 animate-pulse-glow">
+            <i data-lucide="timer" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <span id="restTimerExerciseLabel" class="text-[10px] uppercase tracking-wider font-bold text-emerald-400 block">Rest Timer</span>
+            <span id="restTimerDigits" class="font-mono text-xl font-extrabold text-white leading-none">01:30</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="adjustRest(-15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-slate-200 border border-slate-700 active:scale-95 transition">-15s</button>
+          <button onclick="adjustRest(15)" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-slate-200 border border-slate-700 active:scale-95 transition">+15s</button>
+          <button onclick="hideRestTimer()" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-xs font-bold text-rose-300 border border-rose-500/30 active:scale-95 transition">Skip</button>
+        </div>
+      </div>
+      <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div id="restTimerProgressFill" class="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300" style="width: 100%"></div>
+      </div>
+    </div>
+
+    <!-- MODAL 5: Multi-User Authentication & Supabase Cloud Sync Setup -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold block">Multi-User & Cloud Sync</span>
+              <h3 class="text-base font-extrabold text-white">Account & Friend Isolation</h3>
+            </div>
+          </div>
+          <button onclick="closeAuthModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">✕</button>
+        </div>
+
+        <!-- Instant Profile Switcher Card (Test Multi-User Separation Right Now) -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-white">1. Test Multi-User Isolation (Instant)</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">Isolated Storage</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Switch between <strong>Your Profile</strong> and your <strong>Friend's Profile</strong> to verify that workouts, smart prefill weights, and Garmin metrics never mix:
+          </p>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="switchLocalProfile('owner'); closeAuthModal();" class="p-2.5 rounded-xl border border-slate-700 hover:border-emerald-500/50 bg-slate-900 text-left transition">
+              <span class="text-xs font-extrabold text-white block">👤 You (Primary)</span>
+              <span class="text-[10px] text-emerald-400 font-mono">Squat 100kg • HRV 68ms</span>
+            </button>
+            <button onclick="switchLocalProfile('friend'); closeAuthModal();" class="p-2.5 rounded-xl border border-slate-700 hover:border-sky-500/50 bg-slate-900 text-left transition">
+              <span class="text-xs font-extrabold text-white block">🤝 Friend's Account</span>
+              <span class="text-[10px] text-sky-400 font-mono">Squat 75kg • HRV 61ms</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Supabase Auth Login / Sign Up Card -->
+        <div class="bg-slate-950/90 border border-indigo-500/30 rounded-2xl p-3.5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-white">2. Supabase Cloud Account Login</span>
+            <span id="supabaseConnectionBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">Keys Not Set</span>
+          </div>
+
+          <!-- Logged-in user panel (shown when authenticated with Supabase) -->
+          <div id="supabaseLoggedInPanel" class="hidden bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] uppercase font-mono text-emerald-400 block">Authenticated Cloud User</span>
+                <strong id="supabaseUserEmailDisplay" class="text-xs text-white font-mono">user@example.com</strong>
+              </div>
+              <button onclick="handleSupabaseSignOut()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] font-bold">
+                Sign Out
+              </button>
+            </div>
+            <button onclick="pushCurrentProfileToSupabase()" class="w-full py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition">
+              Force Sync Local Data → Supabase Cloud Now
+            </button>
+          </div>
+
+          <!-- Login / Signup Form -->
+          <div id="supabaseAuthForm" class="space-y-2.5">
+            <div>
+              <label class="text-[11px] font-semibold text-slate-400 block mb-1">Email Address (You or Your Friend)</label>
+              <input id="authEmailInput" type="email" placeholder="athlete@example.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-slate-400 block mb-1">Password (optional for Magic Link)</label>
+              <input id="authPasswordInput" type="password" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500" />
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 pt-1">
+              <button onclick="handleSupabaseAuth('signin')" class="py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-extrabold text-xs transition">
+                Sign In
+              </button>
+              <button onclick="handleSupabaseAuth('signup')" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-bold text-xs transition">
+                Sign Up
+              </button>
+              <button onclick="handleSupabaseAuth('magic')" class="py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 font-bold text-[11px] transition">
+                Magic Link
+              </button>
+            </div>
+          </div>
+
+          <!-- Collapsible Supabase Project URL & Anon Key Drawer -->
+          <details class="group pt-1 border-t border-slate-800/80">
+            <summary class="text-[11px] font-semibold text-indigo-300 cursor-pointer flex items-center justify-between py-1">
+              <span>⚙️ Configure Supabase Project URL & Anon Key</span>
+              <span class="text-[10px] text-slate-500 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="space-y-2 pt-2">
+              <p class="text-[10px] text-slate-400 leading-relaxed">
+                Paste your keys from <strong>Supabase → Project Settings → API</strong>. They are saved locally on your device so you don't even have to edit the code:
+              </p>
+              <input id="configSupabaseUrl" type="url" placeholder="https://xyzcompany.supabase.co" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white" />
+              <input id="configSupabaseKey" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono text-white" />
+              <button onclick="saveSupabaseConfigFromUI()" class="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+                Save & Connect Supabase Client
+              </button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 6: PWA Install & Deployment Quick Guide -->
+    <div id="pwaGuideModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
+              <i data-lucide="smartphone" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-[10px] font-mono uppercase text-sky-400 font-bold block">Full-Screen Native Feel</span>
+              <h3 class="text-base font-extrabold text-white">Install App & Share with Friends</h3>
+            </div>
+          </div>
+          <button onclick="closePwaGuideModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">✕</button>
+        </div>
+
+        <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+            <span class="text-emerald-400 font-extrabold block">Step 1: Host Free on Vercel or Cloudflare Pages</span>
+            <p class="text-[11px] text-slate-400">Upload this single <code class="text-white font-mono">index.html</code> file to a GitHub repo and connect it to Vercel.com or Pages.Cloudflare.com for a free <code class="text-white font-mono">https://</code> URL in 60 seconds.</p>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+            <span class="text-sky-400 font-extrabold block">Step 2: Install on iPhone or Android Home Screen</span>
+            <p class="text-[11px] text-slate-400">
+              • <strong>iPhone (Safari):</strong> Open your URL → Tap <strong>Share</strong> → Tap <strong>Add to Home Screen</strong>.<br>
+              • <strong>Android (Chrome):</strong> Tap <strong>⋮ Menu</strong> → Tap <strong>Install App</strong>.<br>
+              The included PWA manifest & meta tags automatically remove the browser URL bar for a 100% native full-screen experience.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+            <span class="text-indigo-400 font-extrabold block">Step 3: Multi-User Friend Privacy</span>
+            <p class="text-[11px] text-slate-400">
+              When your friend opens the link on their phone, they can sign up via the <strong>Account</strong> button in the header. Every workout, set, and template is tagged with their <code class="text-white font-mono">user_id</code> so your data never mixes.
+            </p>
+          </div>
+        </div>
+
+        <button onclick="closePwaGuideModal()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+          Got It
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL 2: Add Exercise to Active Workout Session -->
+  <div id="addActiveExModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-white">Add Exercise to Session</h3>
+        <button onclick="closeAddExerciseToActiveModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 block mb-1">Pick From Library</label>
+          <select id="activePickLibrarySelect" onchange="populateActiveModalFromLibrary()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"></select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-400 block mb-1">Or Enter Custom Exercise Name</label>
+          <input id="activeCustomExName" type="text" placeholder="e.g., Cable Face Pulls" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-slate-400 block mb-1">Tracking Mode</label>
+            <select id="activeCustomExMode" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white">
+              <option value="weighted">Weighted (kg)</option>
+              <option value="bodyweight">Bodyweight Only</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 block mb-1">Muscle Group</label>
+            <input id="activeCustomExMuscle" type="text" value="Upper / Accessory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-slate-400 block mb-1">Prefill Weight (kg)</label>
+            <input id="activeCustomExWeight" type="number" step="2.5" value="30" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-400 block mb-1">Prefill Reps</label>
+            <input id="activeCustomExReps" type="number" value="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-mono text-white" />
+          </div>
+        </div>
+        <button onclick="confirmAddExerciseToActive()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition">
+          Add to Active Workout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: AI Post-Workout Effort Analysis Modal -->
+  <div id="postWorkoutAiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/50 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+            <i data-lucide="award" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold block">Workout Saved</span>
+            <h3 class="text-base font-extrabold text-white">AI Post-Workout Effort Analysis</h3>
+          </div>
+        </div>
+        <button onclick="closePostWorkoutAiModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div id="postWorkoutStatsStrip" class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center"></div>
+
+      <div id="postWorkoutAiText" class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 text-xs text-slate-200 leading-relaxed space-y-2 max-h-60 overflow-y-auto">
+        Analyzing your session tonnage, progressive overload sets, and Garmin recovery impact...
+      </div>
+
+      <button onclick="closePostWorkoutAiModal()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+        View Updated Analytics Dashboard
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Log Garmin Run Activity -->
+  <div id="runModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-white">Log Garmin / Threshold Run</h3>
+        <button onclick="closeRunModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-400 block mb-1">Run Title</label>
+          <input id="runTitleInput" type="text" value="Threshold Tempo Run" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white" />
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[11px] font-semibold text-slate-400 block mb-1">Dist (km)</label>
+            <input id="runKmInput" type="number" step="0.5" value="8.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm font-mono text-white" />
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-slate-400 block mb-1">Avg HR</label>
+            <input id="runAvgHrInput" type="number" value="170" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-sm font-mono text-white" />
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold text-amber-400 block mb-1">Z4/Z5 (m)</label>
+            <input id="runZ4MinsInput" type="number" value="22" class="w-full bg-slate-950 border border-amber-500/40 rounded-xl px-2.5 py-2 text-sm font-mono text-amber-300" />
+          </div>
+        </div>
+        <button onclick="saveGarminRun()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition">
+          Sync Run to Hybrid Load
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Banner -->
+  <div id="toastBanner" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-emerald-500/60 text-white px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2 transition-all duration-300 -translate-y-24 opacity-0 pointer-events-none">
+    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toastMessage">Action saved</span>
+  </div>
+
+  <script>
+    const apiKey = ""; // Canvas runtime provides key automatically for gemini-3-flash-preview
+
+    // ============================================================================
+    // 1. PWA DYNAMIC WEB APP MANIFEST GENERATOR (Standalone Full-Screen Mobile App)
+    // ============================================================================
+    (function setupDynamicPwaManifest() {
+      const manifestObj = {
+        name: "HybridFlow • Strength, Garmin & AI Coach",
+        short_name: "HybridFlow",
+        description: "Minimalist hybrid strength logger, +2.5kg overload tracker, Garmin readiness & AI Mobility Coach.",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#070b14",
+        theme_color: "#090d16",
+        orientation: "portrait",
+        icons: [
+          {
+            src: "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable"
+          }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(blob);
+      const linkEl = document.getElementById('pwaManifestLink');
+      if (linkEl) linkEl.setAttribute('href', manifestUrl);
+    })();
+
+    // ============================================================================
+    // 2. SUPABASE CLOUD CONFIGURATION & MULTI-USER ISOLATION ENGINE
+    // ============================================================================
+    // Optional: Hardcode your Supabase URL & Anon Key here OR paste them in the in-app Account modal!
+    const DEFAULT_SUPABASE_URL = "";
+    const DEFAULT_SUPABASE_ANON_KEY = "";
+
+    let supabaseUrl = localStorage.getItem('hf_supabase_url') || DEFAULT_SUPABASE_URL;
+    let supabaseAnonKey = localStorage.getItem('hf_supabase_anon_key') || DEFAULT_SUPABASE_ANON_KEY;
+    let supabaseClient = null;
+    let currentCloudUser = null;
+
+    // Active User Profile ID ('owner', 'friend', or Supabase user UUID)
+    let activeUserId = localStorage.getItem('hf_active_user_id') || 'owner';
+
+    // Clean Athletic Vector Thumbnails
+    const SVG_THUMBNAILS = {
+      squat: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><line x1="14" y1="32" x2="86" y2="32" stroke="#34d399" stroke-width="4" stroke-linecap="round"/><rect x="18" y="21" width="6" height="22" rx="2" fill="#10b981"/><rect x="76" y="21" width="6" height="22" rx="2" fill="#10b981"/><circle cx="50" cy="22" r="6" fill="#e2e8f0"/><path d="M50 30 L42 54 L60 65 L56 84 M50 30 L58 54 L40 65 L44 84" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      bench: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><line x1="20" y1="68" x2="80" y2="68" stroke="#475569" stroke-width="5" stroke-linecap="round"/><line x1="30" y1="68" x2="30" y2="85" stroke="#475569" stroke-width="4"/><line x1="70" y1="68" x2="70" y2="85" stroke="#475569" stroke-width="4"/><circle cx="32" cy="56" r="5.5" fill="#e2e8f0"/><line x1="40" y1="58" x2="68" y2="58" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/><line x1="46" y1="58" x2="46" y2="30" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/><rect x="35" y="24" width="22" height="6" rx="2" fill="#10b981"/></svg>`,
+      rdl: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><circle cx="66" cy="30" r="6" fill="#e2e8f0"/><path d="M60 36 L38 50 L42 82 M38 50 L50 82" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round"/><line x1="56" y1="40" x2="56" y2="68" stroke="#38bdf8" stroke-width="3.5"/><circle cx="56" cy="70" r="10" fill="#10b981" fill-opacity="0.25" stroke="#10b981" stroke-width="3"/></svg>`,
+      pullup: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><line x1="14" y1="18" x2="86" y2="18" stroke="#64748b" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="32" r="5.5" fill="#e2e8f0"/><path d="M34 18 L43 38 L57 38 L66 18" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/><path d="M50 38 L50 64 L44 84 M50 64 L56 84" stroke="#94a3b8" stroke-width="4.5" stroke-linecap="round"/></svg>`,
+      legraise: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><line x1="16" y1="16" x2="84" y2="16" stroke="#64748b" stroke-width="4" stroke-linecap="round"/><line x1="40" y1="16" x2="40" y2="36" stroke="#38bdf8" stroke-width="3.5"/><circle cx="47" cy="30" r="5" fill="#e2e8f0"/><line x1="40" y1="36" x2="40" y2="60" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/><line x1="40" y1="60" x2="78" y2="56" stroke="#10b981" stroke-width="5" stroke-linecap="round"/></svg>`,
+      mobility: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><circle cx="34" cy="34" r="6" fill="#34d399"/><path d="M34 42 L48 64 L76 64 M48 64 L30 82" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M62 28 C74 34 78 46 72 56" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4"/></svg>`,
+      glute: `<svg viewBox="0 0 100 100" class="w-full h-full" fill="none"><rect width="100" height="100" rx="16" fill="#090d16"/><line x1="14" y1="78" x2="86" y2="78" stroke="#475569" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="68" r="5.5" fill="#e2e8f0"/><path d="M32 70 L56 48 L76 76" stroke="#10b981" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="56" cy="44" r="6" fill="#f59e0b"/></svg>`
+    };
+
+    // Master Exercise Library with Last Performed History & Prefill Defaults
+    const DEFAULT_EXERCISE_LIBRARY = {
+      'bench-press': {
+        id: 'bench-press',
+        name: 'Bench Press',
+        muscle: 'Chest • Barbell',
+        svg: 'bench',
+        isBodyweight: false,
+        restSeconds: 120,
+        lastDaysAgo: 4,
+        lastBest: '85 kg × 6',
+        defaultSets: [
+          { weight: 85, reps: 6 },
+          { weight: 85, reps: 6 },
+          { weight: 85, reps: 6 }
+        ]
+      },
+      'overhead-press': {
+        id: 'overhead-press',
+        name: 'Overhead Press',
+        muscle: 'Shoulders • Barbell',
+        svg: 'squat',
+        isBodyweight: false,
+        restSeconds: 90,
+        lastDaysAgo: 4,
+        lastBest: '52.5 kg × 6',
+        defaultSets: [
+          { weight: 52.5, reps: 6 },
+          { weight: 52.5, reps: 6 },
+          { weight: 52.5, reps: 6 }
+        ]
+      },
+      'weighted-pullups': {
+        id: 'weighted-pullups',
+        name: 'Weighted Pull-Ups',
+        muscle: 'Lats • Vertical Pull',
+        svg: 'pullup',
+        isBodyweight: false,
+        restSeconds: 90,
+        lastDaysAgo: 4,
+        lastBest: '15 kg × 6',
+        defaultSets: [
+          { weight: 15, reps: 6 },
+          { weight: 15, reps: 6 },
+          { weight: 15, reps: 6 }
+        ]
+      },
+      'barbell-row': {
+        id: 'barbell-row',
+        name: 'Barbell Row',
+        muscle: 'Upper Back • Barbell',
+        svg: 'rdl',
+        isBodyweight: false,
+        restSeconds: 90,
+        lastDaysAgo: 4,
+        lastBest: '75 kg × 8',
+        defaultSets: [
+          { weight: 75, reps: 8 },
+          { weight: 75, reps: 8 },
+          { weight: 75, reps: 8 }
+        ]
+      },
+      'barbell-squat': {
+        id: 'barbell-squat',
+        name: 'Barbell Back Squat',
+        muscle: 'Quads & Glutes • Barbell',
+        svg: 'squat',
+        isBodyweight: false,
+        restSeconds: 120,
+        lastDaysAgo: 5,
+        lastBest: '100 kg × 5',
+        defaultSets: [
+          { weight: 100, reps: 5 },
+          { weight: 100, reps: 5 },
+          { weight: 100, reps: 5 }
+        ]
+      },
+      'romanian-deadlift': {
+        id: 'romanian-deadlift',
+        name: 'Romanian Deadlift',
+        muscle: 'Hamstrings • Hinge',
+        svg: 'rdl',
+        isBodyweight: false,
+        restSeconds: 120,
+        lastDaysAgo: 5,
+        lastBest: '90 kg × 8',
+        defaultSets: [
+          { weight: 90, reps: 8 },
+          { weight: 90, reps: 8 },
+          { weight: 90, reps: 8 }
+        ]
+      },
+      'bulgarian-split-squat': {
+        id: 'bulgarian-split-squat',
+        name: 'Bulgarian Split Squat',
+        muscle: 'Unilateral Legs • DB',
+        svg: 'squat',
+        isBodyweight: false,
+        restSeconds: 90,
+        lastDaysAgo: 5,
+        lastBest: '22.5 kg × 8',
+        defaultSets: [
+          { weight: 22.5, reps: 8 },
+          { weight: 22.5, reps: 8 },
+          { weight: 22.5, reps: 8 }
+        ]
+      },
+      'hanging-leg-raises': {
+        id: 'hanging-leg-raises',
+        name: 'Hanging Leg Raises',
+        muscle: 'Core • Bodyweight',
+        svg: 'legraise',
+        isBodyweight: true,
+        restSeconds: 60,
+        lastDaysAgo: 3,
+        lastBest: 'BW × 15 (2 sets)',
+        defaultSets: [
+          { weight: 0, reps: 15 },
+          { weight: 0, reps: 15 }
+        ]
+      },
+      'trap-bar-deadlift': {
+        id: 'trap-bar-deadlift',
+        name: 'Trap Bar Deadlift',
+        muscle: 'Posterior Chain • Power',
+        svg: 'rdl',
+        isBodyweight: false,
+        restSeconds: 120,
+        lastDaysAgo: 6,
+        lastBest: '130 kg × 5',
+        defaultSets: [
+          { weight: 130, reps: 5 },
+          { weight: 130, reps: 5 },
+          { weight: 130, reps: 5 }
+        ]
+      },
+      'incline-db-press': {
+        id: 'incline-db-press',
+        name: 'Incline DB Press',
+        muscle: 'Upper Chest • Dumbbell',
+        svg: 'bench',
+        isBodyweight: false,
+        restSeconds: 90,
+        lastDaysAgo: 6,
+        lastBest: '32.5 kg × 8',
+        defaultSets: [
+          { weight: 32.5, reps: 8 },
+          { weight: 32.5, reps: 8 },
+          { weight: 32.5, reps: 8 }
+        ]
+      },
+      'chin-ups': {
+        id: 'chin-ups',
+        name: 'Chin-Ups',
+        muscle: 'Lats & Biceps • BW',
+        svg: 'pullup',
+        isBodyweight: true,
+        restSeconds: 90,
+        lastDaysAgo: 6,
+        lastBest: 'BW × 10',
+        defaultSets: [
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 }
+        ]
+      },
+      'hip-90-90-couch': {
+        id: 'hip-90-90-couch',
+        name: '90/90 Hip Switch & Couch Stretch',
+        muscle: 'Hip Flexors & Capsule • Mobility',
+        svg: 'mobility',
+        isBodyweight: true,
+        restSeconds: 45,
+        lastDaysAgo: 2,
+        lastBest: 'BW × 10/side',
+        defaultSets: [
+          { weight: 0, reps: 10 },
+          { weight: 0, reps: 10 }
+        ]
+      },
+      'barbell-glute-bridge': {
+        id: 'barbell-glute-bridge',
+        name: 'Glute Bridge / Hip Thrust',
+        muscle: 'Glute Max • Lumbar Unloading',
+        svg: 'glute',
+        isBodyweight: false,
+        restSeconds: 75,
+        lastDaysAgo: 4,
+        lastBest: '60 kg × 12',
+        defaultSets: [
+          { weight: 60, reps: 12 },
+          { weight: 60, reps: 12 },
+          { weight: 60, reps: 12 }
+        ]
+      },
+      'dead-bug-core': {
+        id: 'dead-bug-core',
+        name: 'Dead Bug (Slow Eccentric)',
+        muscle: 'Anterior Core • Spine Neutral',
+        svg: 'mobility',
+        isBodyweight: true,
+        restSeconds: 60,
+        lastDaysAgo: 3,
+        lastBest: 'BW × 12',
+        defaultSets: [
+          { weight: 0, reps: 12 },
+          { weight: 0, reps: 12 },
+          { weight: 0, reps: 12 }
+        ]
+      },
+      'atg-split-squat': {
+        id: 'atg-split-squat',
+        name: 'ATG Split Squat (Hip Flexor Lengthening)',
+        muscle: 'Psoas & Quads • Unilateral',
+        svg: 'squat',
+        isBodyweight: false,
+        restSeconds: 75,
+        lastDaysAgo: 5,
+        lastBest: '15 kg × 8',
+        defaultSets: [
+          { weight: 15, reps: 8 },
+          { weight: 15, reps: 8 },
+          { weight: 15, reps: 8 }
+        ]
+      }
+    };
+
+    const DEFAULT_TEMPLATES = [
+      {
+        id: 'tpl-upper-a',
+        name: 'Upper Body A (Strength & Hypertrophy)',
+        focus: 'Chest, Shoulders & Back',
+        lastPerformed: '4 days ago',
+        exerciseIds: ['bench-press', 'overhead-press', 'weighted-pullups', 'barbell-row']
+      },
+      {
+        id: 'tpl-lower-core',
+        name: 'Lower Body & Core (Power)',
+        focus: 'Quads, Hamstrings & Hanging Core',
+        lastPerformed: '5 days ago',
+        exerciseIds: ['barbell-squat', 'romanian-deadlift', 'bulgarian-split-squat', 'hanging-leg-raises']
+      },
+      {
+        id: 'tpl-full-hybrid',
+        name: 'Full Body Hybrid (Post-Run)',
+        focus: 'Low-CNS Hinge, Upper Press & Core',
+        lastPerformed: '6 days ago',
+        exerciseIds: ['trap-bar-deadlift', 'incline-db-press', 'chin-ups', 'hanging-leg-raises']
+      }
+    ];
+
+    // Friend Demo Profile Default Data (Demonstrates 100% isolated history & prefill weights)
+    const FRIEND_DEFAULT_TEMPLATES = [
+      {
+        id: 'tpl-friend-upper',
+        name: 'Friend’s Push / Pull Express',
+        focus: 'Chest, Back & Core (Friend Profile)',
+        lastPerformed: '2 days ago',
+        exerciseIds: ['bench-press', 'weighted-pullups', 'hanging-leg-raises']
+      },
+      {
+        id: 'tpl-friend-legs',
+        name: 'Friend’s Lower Body & Mobility',
+        focus: 'Quads, Glutes & Hip Decompression',
+        lastPerformed: '3 days ago',
+        exerciseIds: ['barbell-squat', 'romanian-deadlift', 'hip-90-90-couch']
+      }
+    ];
+
+    const FRIEND_DEFAULT_HISTORY = [
+      {
+        date: '2 days ago',
+        title: 'Friend’s Push / Pull Express',
+        type: 'strength',
+        tonnage: 3420,
+        summary: 'Bench 67.5kg×8 • Pull-Ups BW×8 • Hanging Leg Raises 2×15'
+      }
+    ];
+
+    function buildDefaultLibraryForUser(userId) {
+      const lib = JSON.parse(JSON.stringify(DEFAULT_EXERCISE_LIBRARY));
+      if (userId === 'friend') {
+        // Give the friend profile distinct weights so switching clearly shows isolated prefills
+        lib['barbell-squat'].lastBest = '75 kg × 6';
+        lib['barbell-squat'].defaultSets = [{ weight: 75, reps: 6 }, { weight: 75, reps: 6 }, { weight: 75, reps: 6 }];
+        lib['bench-press'].lastBest = '67.5 kg × 8';
+        lib['bench-press'].defaultSets = [{ weight: 67.5, reps: 8 }, { weight: 67.5, reps: 8 }, { weight: 67.5, reps: 8 }];
+      }
+      return lib;
+    }
+
+    function getStorageKey(baseKey) {
+      return `${baseKey}_${activeUserId}`;
+    }
+
+    // Active User State Variables
+    let exerciseLibrary = {};
+    let templates = [];
+    let historyLog = [];
+    let garminMetrics = {};
+
+    function loadUserProfileState(userId) {
+      activeUserId = userId;
+      localStorage.setItem('hf_active_user_id', activeUserId);
+
+      const isFriend = userId === 'friend';
+      exerciseLibrary = JSON.parse(localStorage.getItem(getStorageKey('hf_library'))) || buildDefaultLibraryForUser(userId);
+      templates = JSON.parse(localStorage.getItem(getStorageKey('hf_templates'))) ||
+        JSON.parse(JSON.stringify(isFriend ? FRIEND_DEFAULT_TEMPLATES : DEFAULT_TEMPLATES));
+      historyLog = JSON.parse(localStorage.getItem(getStorageKey('hf_history'))) ||
+        JSON.parse(JSON.stringify(isFriend ? FRIEND_DEFAULT_HISTORY : DEFAULT_HISTORY_LOG));
+      garminMetrics = JSON.parse(localStorage.getItem(getStorageKey('hf_garmin'))) || (isFriend ? {
+        hrv: 61,
+        hrvStatus: 'Balanced',
+        rhr: 53,
+        sleep: 79,
+        readiness: 76,
+        weeklyRunKm: 21.0,
+        weeklyZ4Mins: 25
+      } : {
+        hrv: 68,
+        hrvStatus: 'Balanced',
+        rhr: 48,
+        sleep: 84,
+        readiness: 82,
+        weeklyRunKm: 34.5,
+        weeklyZ4Mins: 42
+      });
+    }
+
+    // Initialize default profile state immediately
+    loadUserProfileState(activeUserId);
+
+    let activeSession = {
+      templateId: null,
+      title: 'Lower Body & Core (Power)',
+      startedAt: null,
+      elapsedSeconds: 0,
+      exercises: []
+    };
+
+    let workoutTimerInterval = null;
+    let restInterval = null;
+    let restRemaining = 0;
+    let restTotal = 90;
+    let chartHybridInstance = null;
+    let chart1RMInstance = null;
+
+    function persistAll() {
+      localStorage.setItem(getStorageKey('hf_library'), JSON.stringify(exerciseLibrary));
+      localStorage.setItem(getStorageKey('hf_templates'), JSON.stringify(templates));
+      localStorage.setItem(getStorageKey('hf_history'), JSON.stringify(historyLog));
+      localStorage.setItem(getStorageKey('hf_garmin'), JSON.stringify(garminMetrics));
+    }
+
+    // Switch between Your Profile and Friend's Profile (or Cloud User)
+    function switchLocalProfile(targetProfileId) {
+      loadUserProfileState(targetProfileId);
+      activeSession.exercises = [];
+      clearInterval(workoutTimerInterval);
+      document.getElementById('activeWorkoutDot').classList.add('hidden');
+
+      updateProfileHeaderUI();
+      renderDashboardTemplates();
+      updateGarminUI();
+      if (!document.getElementById('viewWorkout').classList.contains('hidden')) {
+        loadTemplateIntoActiveSession(templates[0].id, false);
+        renderActiveWorkout();
+      } else if (!document.getElementById('viewAnalytics').classList.contains('hidden')) {
+        renderAnalyticsView();
+      }
+      const label = targetProfileId === 'friend' ? "Friend's Isolated Profile" : "Your Primary Profile";
+      showToast(`Switched to ${label} (prefills & history isolated)`);
+    }
+
+    function updateProfileHeaderUI() {
+      const badge = document.getElementById('headerUserBadge');
+      const label = document.getElementById('activeProfileLabel');
+      const syncTag = document.getElementById('syncModeTag');
+      const btnOwner = document.getElementById('btnSwitchOwner');
+      const btnFriend = document.getElementById('btnSwitchFriend');
+
+      if (currentCloudUser) {
+        const shortName = currentCloudUser.email ? currentCloudUser.email.split('@')[0] : 'Cloud';
+        badge.textContent = shortName;
+        label.textContent = currentCloudUser.email;
+        syncTag.textContent = 'Supabase Cloud';
+        syncTag.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      } else if (activeUserId === 'friend') {
+        badge.textContent = 'Friend';
+        label.textContent = 'Friend Demo (Isolated)';
+        syncTag.textContent = 'Local Isolated';
+        syncTag.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40';
+      } else {
+        badge.textContent = 'You';
+        label.textContent = 'You (Owner)';
+        syncTag.textContent = supabaseClient ? 'Cloud Ready' : 'Local Isolated';
+        syncTag.className = 'text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700';
+      }
+
+      if (btnOwner && btnFriend) {
+        if (activeUserId === 'friend') {
+          btnFriend.className = 'px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-500/25 text-sky-300 border border-sky-500/50 transition';
+          btnOwner.className = 'px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition';
+        } else {
+          btnOwner.className = 'px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 transition';
+          btnFriend.className = 'px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition';
+        }
+      }
+    }
+
+    // ============================================================================
+    // 3. SUPABASE CLIENT INITIALIZATION, AUTH & CLOUD DATABASE SYNC
+    // ============================================================================
+    async function initSupabaseClient() {
+      const connBadge = document.getElementById('supabaseConnectionBadge');
+      const pill = document.getElementById('cloudStatusPill');
+
+      if (!supabaseUrl || !supabaseAnonKey || !window.supabase) {
+        if (connBadge) {
+          connBadge.textContent = 'Local Mode (Add Keys Below)';
+          connBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400';
+        }
+        updateProfileHeaderUI();
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        if (connBadge) {
+          connBadge.textContent = 'Supabase Connected';
+          connBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        }
+        if (pill) {
+          pill.textContent = 'Cloud Connected';
+        }
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+          onSupabaseUserAuthenticated(session.user);
+        }
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          if (session?.user) {
+            onSupabaseUserAuthenticated(session.user);
+          } else {
+            currentCloudUser = null;
+            document.getElementById('supabaseLoggedInPanel')?.classList.add('hidden');
+            document.getElementById('supabaseAuthForm')?.classList.remove('hidden');
+            updateProfileHeaderUI();
+          }
+        });
+      } catch (err) {
+        console.warn('Supabase init error:', err);
+      }
+    }
+
+    async function onSupabaseUserAuthenticated(user) {
+      currentCloudUser = user;
+      document.getElementById('supabaseLoggedInPanel')?.classList.remove('hidden');
+      document.getElementById('supabaseAuthForm')?.classList.add('hidden');
+      const emailEl = document.getElementById('supabaseUserEmailDisplay');
+      if (emailEl) emailEl.textContent = user.email;
+
+      // Switch local storage namespace to the authenticated user's UUID
+      loadUserProfileState(user.id);
+      updateProfileHeaderUI();
+      await pullUserDataFromSupabase();
+      renderDashboardTemplates();
+      updateGarminUI();
+    }
+
+    async function saveSupabaseConfigFromUI() {
+      const urlInput = document.getElementById('configSupabaseUrl').value.trim();
+      const keyInput = document.getElementById('configSupabaseKey').value.trim();
+      if (!urlInput || !keyInput) {
+        showToast('Please paste both your Supabase URL and Anon Key');
+        return;
+      }
+      supabaseUrl = urlInput;
+      supabaseAnonKey = keyInput;
+      localStorage.setItem('hf_supabase_url', supabaseUrl);
+      localStorage.setItem('hf_supabase_anon_key', supabaseAnonKey);
+      await initSupabaseClient();
+      showToast('Supabase Cloud client connected!');
+    }
+
+    async function handleSupabaseAuth(mode) {
+      if (!supabaseClient) {
+        showToast('Expand "Configure Supabase URL & Key" below first, or use the Instant Profile Switcher above!');
+        return;
+      }
+      const email = document.getElementById('authEmailInput').value.trim();
+      const password = document.getElementById('authPasswordInput').value;
+
+      if (!email) {
+        showToast('Enter your email address first');
+        return;
+      }
+
+      try {
+        if (mode === 'magic') {
+          const { error } = await supabaseClient.auth.signInWithOtp({ email });
+          if (error) throw error;
+          showToast(`Magic link sent to ${email}! Check your inbox.`);
+        } else if (mode === 'signup') {
+          if (!password || password.length < 6) {
+            showToast('Password must be at least 6 characters');
+            return;
+          }
+          const { error } = await supabaseClient.auth.signUp({ email, password });
+          if (error) throw error;
+          showToast('Account created! Signed in & isolated.');
+          closeAuthModal();
+        } else {
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          showToast(`Welcome back, ${email}!`);
+          closeAuthModal();
+        }
+      } catch (err) {
+        showToast(err.message || 'Authentication failed');
+      }
+    }
+
+    async function handleSupabaseSignOut() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      currentCloudUser = null;
+      switchLocalProfile('owner');
+      showToast('Signed out of cloud session');
+    }
+
+    async function pullUserDataFromSupabase() {
+      if (!supabaseClient || !currentCloudUser) return;
+      try {
+        // Pull user's latest Garmin metrics if present
+        const { data: garminRows } = await supabaseClient
+          .from('fact_garmin_daily')
+          .select('*')
+          .order('metric_date', { ascending: false })
+          .limit(1);
+
+        if (garminRows && garminRows.length > 0) {
+          const g = garminRows[0];
+          garminMetrics.hrv = g.hrv_ms ?? garminMetrics.hrv;
+          garminMetrics.hrvStatus = g.hrv_status || garminMetrics.hrvStatus;
+          garminMetrics.rhr = g.resting_hr ?? garminMetrics.rhr;
+          garminMetrics.readiness = g.readiness_score ?? garminMetrics.readiness;
+          garminMetrics.sleep = g.sleep_score ?? garminMetrics.sleep;
+        }
+
+        // Pull user's recent workouts
+        const { data: workoutRows } = await supabaseClient
+          .from('fact_workouts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (workoutRows && workoutRows.length > 0) {
+          historyLog = workoutRows.map(w => ({
+            date: w.workout_date || 'Cloud',
+            title: w.template_name,
+            type: 'strength',
+            tonnage: Number(w.total_volume_kg) || 0,
+            summary: w.ai_summary || 'Synced from Supabase Cloud'
+          }));
+        }
+        persistAll();
+      } catch (e) {
+        console.warn('Supabase pull notice:', e);
+      }
+    }
+
+    async function syncCompletedWorkoutToSupabase(title, tonnage, summaryText, completedExercises) {
+      if (!supabaseClient || !currentCloudUser) return;
+      try {
+        const { data: insertedWorkout, error: wErr } = await supabaseClient
+          .from('fact_workouts')
+          .insert({
+            template_name: title,
+            duration_min: Math.max(1, Math.round(activeSession.elapsedSeconds / 60)),
+            total_volume_kg: tonnage,
+            ai_summary: summaryText,
+            user_id: currentCloudUser.id
+          })
+          .select()
+          .single();
+
+        if (wErr || !insertedWorkout) return;
+
+        const setsPayload = [];
+        completedExercises.forEach(ex => {
+          ex.sets.forEach((s, idx) => {
+            if (s.completed) {
+              setsPayload.push({
+                workout_id: insertedWorkout.workout_id,
+                exercise_id: ex.id,
+                set_number: idx + 1,
+                is_bodyweight: !!ex.isBodyweight,
+                weight_kg: ex.isBodyweight ? 0 : (parseFloat(s.weight) || 0),
+                reps: parseInt(s.reps) || 0,
+                user_id: currentCloudUser.id
+              });
+            }
+          });
+        });
+
+        if (setsPayload.length > 0) {
+          await supabaseClient.from('fact_sets').insert(setsPayload);
+        }
+      } catch (e) {
+        console.warn('Cloud workout sync skipped:', e);
+      }
+    }
+
+    async function pushCurrentProfileToSupabase() {
+      if (!supabaseClient || !currentCloudUser) {
+        showToast('Sign in to your Supabase account first!');
+        return;
+      }
+      try {
+        await supabaseClient.from('fact_garmin_daily').upsert({
+          metric_date: new Date().toISOString().slice(0, 10),
+          hrv_ms: garminMetrics.hrv,
+          hrv_status: garminMetrics.hrvStatus,
+          resting_hr: garminMetrics.rhr,
+          readiness_score: garminMetrics.readiness,
+          sleep_score: garminMetrics.sleep,
+          run_distance_km: garminMetrics.weeklyRunKm,
+          threshold_z4_z5_min: garminMetrics.weeklyZ4Mins,
+          user_id: currentCloudUser.id
+        });
+        showToast('Synced Garmin Readiness & Templates to Supabase Cloud!');
+      } catch (e) {
+        showToast('Saved locally (verify Supabase tables are created)');
+      }
+    }
+
+    function openAuthModal() {
+      document.getElementById('configSupabaseUrl').value = supabaseUrl;
+      document.getElementById('configSupabaseKey').value = supabaseAnonKey;
+      const modal = document.getElementById('authModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openPwaGuideModal() {
+      const modal = document.getElementById('pwaGuideModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closePwaGuideModal() {
+      const modal = document.getElementById('pwaGuideModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function navigateTo(view) {
+      const views = ['dashboard', 'workout', 'analytics'];
+      views.forEach(v => {
+        const el = document.getElementById('view' + v.charAt(0).toUpperCase() + v.slice(1));
+        const btn = document.getElementById('nav' + v.charAt(0).toUpperCase() + v.slice(1));
+        if (v === view) {
+          el.classList.remove('hidden');
+          btn.className = 'py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-emerald-500 text-slate-950 shadow relative';
+        } else {
+          el.classList.add('hidden');
+          btn.className = 'py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-white relative';
+        }
+      });
+
+      if (view === 'dashboard') {
+        renderDashboardTemplates();
+        updateGarminUI();
+      } else if (view === 'workout') {
+        if (activeSession.exercises.length === 0) {
+          loadTemplateIntoActiveSession(templates[1].id, false);
+        }
+        renderActiveWorkout();
+      } else if (view === 'analytics') {
+        renderAnalyticsView();
+      }
+      lucide.createIcons();
+    }
+
+    function updateGarminUI() {
+      document.getElementById('metricHrv').textContent = `${garminMetrics.hrv} ms`;
+      document.getElementById('metricReadiness').innerHTML = `${garminMetrics.readiness}<span class="text-xs text-slate-400">/100</span>`;
+      document.getElementById('metricRhr').textContent = `RHR: ${garminMetrics.rhr} bpm • Sleep: ${garminMetrics.sleep}`;
+      document.getElementById('metricRunKm').textContent = `${garminMetrics.weeklyRunKm.toFixed(1)} km`;
+      document.getElementById('metricRunZ4').textContent = `${garminMetrics.weeklyZ4Mins} mins`;
+    }
+
+    function renderDashboardTemplates() {
+      const container = document.getElementById('savedTemplatesList');
+      container.innerHTML = templates.map(tpl => {
+        const exNames = tpl.exerciseIds
+          .map(id => exerciseLibrary[id]?.name || id)
+          .join(' • ');
+
+        return `
+          <div class="bg-slate-900/95 border border-slate-800 hover:border-emerald-500/50 rounded-3xl p-4 transition shadow-lg space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="text-sm font-extrabold text-white">${tpl.name}</h3>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/25">
+                    Last: ${tpl.lastPerformed}
+                  </span>
+                </div>
+                <p class="text-[11px] text-emerald-400 font-medium mt-0.5">${tpl.focus} • ${tpl.exerciseIds.length} Exercises</p>
+              </div>
+              <button onclick="loadTemplateIntoActiveSession('${tpl.id}', true)" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-extrabold text-xs transition shadow-md shadow-emerald-500/15 flex items-center gap-1 flex-shrink-0">
+                <span>Start</span>
+                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+              </button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2">
+              ${exNames}
+            </p>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function loadTemplateIntoActiveSession(templateId, switchView = true) {
+      const tpl = templates.find(t => t.id === templateId) || templates[0];
+      activeSession.templateId = tpl.id;
+      activeSession.title = tpl.name;
+      activeSession.elapsedSeconds = 0;
+
+      activeSession.exercises = tpl.exerciseIds.map(id => {
+        const libEx = exerciseLibrary[id];
+        if (!libEx) return null;
+        return {
+          id: libEx.id,
+          name: libEx.name,
+          muscle: libEx.muscle,
+          svg: libEx.svg || 'squat',
+          isBodyweight: libEx.isBodyweight,
+          restSeconds: libEx.restSeconds || 90,
+          lastDaysAgo: libEx.lastDaysAgo,
+          lastBest: libEx.lastBest,
+          sets: libEx.defaultSets.map(s => ({
+            weight: s.weight,
+            reps: s.reps,
+            prevRef: libEx.isBodyweight ? `BW × ${s.reps}` : `${s.weight}kg × ${s.reps}`,
+            completed: false,
+            overloaded: false
+          }))
+        };
+      }).filter(Boolean);
+
+      document.getElementById('activeWorkoutTitle').value = activeSession.title;
+      document.getElementById('activeWorkoutDot').classList.remove('hidden');
+      startWorkoutClock();
+
+      if (switchView) {
+        navigateTo('workout');
+        showToast(`Loaded "${tpl.name}" with prefilled sets!`);
+      }
+    }
+
+    function startEmptyCustomWorkout() {
+      activeSession.templateId = null;
+      activeSession.title = 'Custom Hybrid Session';
+      activeSession.elapsedSeconds = 0;
+      activeSession.exercises = [
+        JSON.parse(JSON.stringify({
+          id: 'barbell-squat',
+          name: 'Barbell Back Squat',
+          muscle: 'Quads & Glutes • Barbell',
+          svg: 'squat',
+          isBodyweight: false,
+          restSeconds: 120,
+          lastDaysAgo: 5,
+          lastBest: '100 kg × 5',
+          sets: [
+            { weight: 100, reps: 5, prevRef: '100kg × 5', completed: false, overloaded: false },
+            { weight: 100, reps: 5, prevRef: '100kg × 5', completed: false, overloaded: false }
+          ]
+        })),
+        JSON.parse(JSON.stringify({
+          id: 'hanging-leg-raises',
+          name: 'Hanging Leg Raises',
+          muscle: 'Core • Bodyweight',
+          svg: 'legraise',
+          isBodyweight: true,
+          restSeconds: 60,
+          lastDaysAgo: 3,
+          lastBest: 'BW × 15 (2 sets)',
+          sets: [
+            { weight: 0, reps: 15, prevRef: 'BW × 15', completed: false, overloaded: false },
+            { weight: 0, reps: 15, prevRef: 'BW × 15', completed: false, overloaded: false }
+          ]
+        }))
+      ];
+      document.getElementById('activeWorkoutTitle').value = activeSession.title;
+      document.getElementById('activeWorkoutDot').classList.remove('hidden');
+      startWorkoutClock();
+      navigateTo('workout');
+      showToast('Started custom workout!');
+    }
+
+    function startWorkoutClock() {
+      clearInterval(workoutTimerInterval);
+      workoutTimerInterval = setInterval(() => {
+        activeSession.elapsedSeconds++;
+        const mins = String(Math.floor(activeSession.elapsedSeconds / 60)).padStart(2, '0');
+        const secs = String(activeSession.elapsedSeconds % 60).padStart(2, '0');
+        const el = document.getElementById('workoutElapsedDisplay');
+        if (el) el.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function renderActiveWorkout() {
+      const container = document.getElementById('activeExercisesContainer');
+      container.innerHTML = '';
+
+      let totalVolume = 0;
+
+      activeSession.exercises.forEach((ex, exIdx) => {
+        ex.sets.forEach(s => {
+          if (s.completed && !ex.isBodyweight) {
+            totalVolume += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+          }
+        });
+
+        const thumbSvg = SVG_THUMBNAILS[ex.svg] || SVG_THUMBNAILS.squat;
+
+        const setRowsHtml = ex.sets.map((s, sIdx) => {
+          const rowStyle = s.completed
+            ? 'bg-emerald-500/15 border-emerald-500/40'
+            : 'bg-slate-950/80 border-slate-800/90';
+
+          const weightControlsHtml = ex.isBodyweight
+            ? `<div class="col-span-5 flex items-center">
+                 <span class="px-2.5 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-[11px] font-mono font-bold text-sky-300">
+                   Bodyweight Only
+                 </span>
+               </div>`
+            : `<div class="col-span-5 flex items-center gap-1">
+                 <input type="number" step="0.5" value="${s.weight}"
+                   onchange="updateActiveSet(${exIdx}, ${sIdx}, 'weight', this.value)"
+                   class="w-16 bg-slate-900 border ${s.overloaded ? 'border-amber-400 text-amber-300' : 'border-slate-700 text-white'} rounded-xl py-1.5 px-1.5 text-center font-mono font-bold text-sm focus:outline-none focus:border-emerald-400" />
+                 <button onclick="stepActiveWeight(${exIdx}, ${sIdx}, 2.5)" title="Add 2.5 kg"
+                   class="px-2 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 active:scale-95 border border-amber-500/40 text-amber-300 font-mono font-extrabold text-xs transition">
+                   +2.5
+                 </button>
+                 <button onclick="stepActiveWeight(${exIdx}, ${sIdx}, -2.5)" title="Subtract 2.5 kg"
+                   class="px-1.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 text-slate-400 font-mono font-bold text-xs transition">
+                   -
+                 </button>
+               </div>`;
+
+          return `
+            <div class="grid grid-cols-12 items-center gap-1.5 px-2.5 py-2 rounded-xl border transition-all ${rowStyle}">
+              <div class="col-span-2 flex flex-col">
+                <span class="font-mono text-xs font-extrabold text-slate-200">#${sIdx + 1}</span>
+                <span class="text-[9px] font-mono text-slate-400 truncate">${s.prevRef}</span>
+              </div>
+
+              ${weightControlsHtml}
+
+              <div class="col-span-3 flex justify-center">
+                <input type="number" value="${s.reps}"
+                  onchange="updateActiveSet(${exIdx}, ${sIdx}, 'reps', this.value)"
+                  class="w-14 bg-slate-900 border border-slate-700 rounded-xl py-1.5 px-2 text-center font-mono font-bold text-sm text-white focus:outline-none focus:border-emerald-400" />
+              </div>
+
+              <div class="col-span-2 flex justify-end">
+                <button onclick="toggleActiveSetDone(${exIdx}, ${sIdx})"
+                  class="w-10 h-9 rounded-xl flex items-center justify-center transition active:scale-90 ${
+                    s.completed
+                      ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+                  }">
+                  <i data-lucide="check" class="w-5 h-5 stroke-[2.8]"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const cardHtml = `
+          <section class="bg-slate-900/95 border border-slate-800/90 rounded-3xl p-3.5 shadow-lg space-y-3">
+            <div class="flex items-start justify-between gap-2.5">
+              <div class="flex items-center gap-3">
+                <div class="w-14 h-14 rounded-2xl overflow-hidden border border-slate-700/80 flex-shrink-0">
+                  ${thumbSvg}
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <h3 class="font-extrabold text-sm text-white">${ex.name}</h3>
+                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${ex.muscle}</span>
+                  </div>
+                  <div class="mt-1">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg">
+                      Last performed: ${ex.lastDaysAgo}d ago • Best: ${ex.lastBest}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="toggleActiveBodyweight(${exIdx})"
+                class="text-[10px] font-mono font-bold px-2.5 py-1 rounded-xl border transition flex-shrink-0 ${
+                  ex.isBodyweight
+                    ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                    : 'bg-slate-800 text-slate-300 border-slate-700'
+                }">
+                ${ex.isBodyweight ? 'BW Only' : 'Weighted'}
+              </button>
+            </div>
+
+            <div class="grid grid-cols-12 text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5">
+              <div class="col-span-2">Set / Prev</div>
+              <div class="col-span-5">${ex.isBodyweight ? 'Mode' : 'Weight (kg) • +2.5'}</div>
+              <div class="col-span-3 text-center">Reps</div>
+              <div class="col-span-2 text-right">Log</div>
+            </div>
+
+            <div class="space-y-1.5">
+              ${setRowsHtml}
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-center gap-2">
+                <button onclick="addSetRow(${exIdx})" class="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 transition">
+                  + Add Set
+                </button>
+                <button onclick="removeSetRow(${exIdx})" class="text-xs font-semibold text-slate-400 hover:text-rose-400 px-2 py-1.5 transition">
+                  - Set
+                </button>
+              </div>
+
+              ${!ex.isBodyweight ? `
+                <button onclick="overloadAllSets(${exIdx}, 2.5)" class="text-[11px] font-mono font-extrabold text-amber-300 hover:text-amber-200 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1.5 rounded-xl border border-amber-500/30 transition">
+                  All Sets +2.5 kg
+                </button>
+              ` : `
+                <span class="text-[11px] font-mono text-slate-400">Auto-Rest: ${ex.restSeconds}s</span>
+              `}
+            </div>
+          </section>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+
+      document.getElementById('activeTonnageDisplay').textContent = `${totalVolume.toLocaleString()} kg vol`;
+      lucide.createIcons();
+    }
+
+    function updateActiveSet(exIdx, sIdx, field, val) {
+      const num = field === 'weight' ? parseFloat(val) || 0 : parseInt(val) || 0;
+      activeSession.exercises[exIdx].sets[sIdx][field] = num;
+      renderActiveWorkout();
+    }
+
+    function stepActiveWeight(exIdx, sIdx, delta) {
+      const s = activeSession.exercises[exIdx].sets[sIdx];
+      s.weight = Math.max(0, +((parseFloat(s.weight) || 0) + delta).toFixed(2));
+      s.overloaded = delta > 0;
+      renderActiveWorkout();
+      showToast(`${activeSession.exercises[exIdx].name} Set #${sIdx + 1}: ${s.weight} kg`);
+    }
+
+    function overloadAllSets(exIdx, delta) {
+      activeSession.exercises[exIdx].sets.forEach(s => {
+        s.weight = Math.max(0, +((parseFloat(s.weight) || 0) + delta).toFixed(2));
+        s.overloaded = true;
+      });
+      renderActiveWorkout();
+      showToast(`Added +${delta} kg to all sets of ${activeSession.exercises[exIdx].name}!`);
+    }
+
+    function toggleActiveBodyweight(exIdx) {
+      const ex = activeSession.exercises[exIdx];
+      ex.isBodyweight = !ex.isBodyweight;
+      if (!ex.isBodyweight && ex.sets[0]?.weight === 0) {
+        ex.sets.forEach(s => s.weight = 10);
+      }
+      renderActiveWorkout();
+    }
+
+    function addSetRow(exIdx) {
+      const sets = activeSession.exercises[exIdx].sets;
+      const last = sets[sets.length - 1] || { weight: 20, reps: 10, prevRef: '20kg × 10' };
+      sets.push({
+        weight: last.weight,
+        reps: last.reps,
+        prevRef: last.prevRef,
+        completed: false,
+        overloaded: last.overloaded
+      });
+      renderActiveWorkout();
+    }
+
+    function removeSetRow(exIdx) {
+      if (activeSession.exercises[exIdx].sets.length > 1) {
+        activeSession.exercises[exIdx].sets.pop();
+        renderActiveWorkout();
+      }
+    }
+
+    function toggleActiveSetDone(exIdx, sIdx) {
+      const ex = activeSession.exercises[exIdx];
+      const set = ex.sets[sIdx];
+      set.completed = !set.completed;
+      renderActiveWorkout();
+
+      if (set.completed) {
+        triggerRestTimer(ex.restSeconds || 90, ex.name);
+      }
+    }
+
+    function triggerRestTimer(seconds, exName) {
+      clearInterval(restInterval);
+      restTotal = seconds;
+      restRemaining = seconds;
+
+      const bar = document.getElementById('restTimerBar');
+      document.getElementById('restTimerExerciseLabel').textContent = `Rest • ${exName}`;
+      bar.classList.remove('translate-y-44', 'opacity-0', 'pointer-events-none');
+
+      refreshRestUI();
+      restInterval = setInterval(() => {
+        restRemaining--;
+        if (restRemaining <= 0) {
+          clearInterval(restInterval);
+          playCompletionChime();
+          hideRestTimer();
+          showToast('Rest finished! Time for your next set.');
+        } else {
+          refreshRestUI();
+        }
+      }, 1000);
+    }
+
+    function refreshRestUI() {
+      const m = String(Math.floor(restRemaining / 60)).padStart(2, '0');
+      const s = String(restRemaining % 60).padStart(2, '0');
+      document.getElementById('restTimerDigits').textContent = `${m}:${s}`;
+      const pct = Math.max(0, Math.min(100, (restRemaining / restTotal) * 100));
+      document.getElementById('restTimerProgressFill').style.width = `${pct}%`;
+    }
+
+    function adjustRest(delta) {
+      restRemaining = Math.max(5, restRemaining + delta);
+      restTotal = Math.max(restTotal, restRemaining);
+      refreshRestUI();
+    }
+
+    function hideRestTimer() {
+      clearInterval(restInterval);
+      document.getElementById('restTimerBar').classList.add('translate-y-44', 'opacity-0', 'pointer-events-none');
+    }
+
+    function playCompletionChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [587.33, 783.99, 1046.5].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + i * 0.12);
+          osc.stop(ctx.currentTime + i * 0.12 + 0.13);
+        });
+      } catch (e) {}
+    }
+
+    // Stores the latest AI-generated workout proposal so the user can Start or Save it in 1 click
+    let lastAiGeneratedRoutine = null;
+
+    // Pre-built biomechanical fallback routine for Office Hip & Back Decompression
+    const FALLBACK_OFFICE_HIP_BACK_ROUTINE = {
+      routineTitle: "Anti-Office Hip Decompression & Back Relief",
+      routineFocus: "Psoas Lengthening, Glute Activation & Spinal Decompression",
+      biomechanicalWhy: "Prolonged sitting locks your hip flexors (iliopsoas and rectus femoris) in a shortened position while putting your glutes to sleep ('glute amnesia'). When you stand or lift, those tight hip flexors pull your pelvis into anterior pelvic tilt, forcing your lower back (lumbar spine) to hyperextend and absorb mechanical stress. This routine opens the hip capsule, lengthens the psoas under control, and wakes up your glutes and deep anterior core to stabilize your spine.",
+      exercises: [
+        {
+          id: "hip-90-90-couch",
+          name: "90/90 Hip Switch & Couch Stretch",
+          targetArea: "Hip Flexors (Psoas) & Internal/External Rotation",
+          svg: "mobility",
+          isBodyweight: true,
+          setsCount: 2,
+          reps: 10,
+          weightKg: 0,
+          restSeconds: 45,
+          cue: "Keep ribs stacked over pelvis; squeeze back glute during couch stretch to reciprocally inhibit the tight psoas."
+        },
+        {
+          id: "barbell-glute-bridge",
+          name: "Glute Bridge / Barbell Hip Thrust",
+          targetArea: "Glute Maximus • Pelvis Stabilization",
+          svg: "glute",
+          isBodyweight: false,
+          setsCount: 3,
+          reps: 12,
+          weightKg: 60,
+          restSeconds: 75,
+          cue: "2-second isometric pause at the top with a slight posterior pelvic tuck—zero lower back arch."
+        },
+        {
+          id: "dead-bug-core",
+          name: "Dead Bug / Bird-Dog",
+          targetArea: "Transverse Abdominis • Anti-Extension Core",
+          svg: "mobility",
+          isBodyweight: true,
+          setsCount: 3,
+          reps: 12,
+          weightKg: 0,
+          restSeconds: 60,
+          cue: "Press your lower back flat into the floor like crushing a grape; exhale fully as opposite arm and leg extend."
+        },
+        {
+          id: "atg-split-squat",
+          name: "Split Squat (ATG Hip-Flexor Lengthening)",
+          targetArea: "Loaded Hip Extension & Quad/Glute Balance",
+          svg: "squat",
+          isBodyweight: false,
+          setsCount: 3,
+          reps: 8,
+          weightKg: 15,
+          restSeconds: 75,
+          cue: "Keep torso upright and let the trailing hip sink forward to actively lengthen the hip flexor under load."
+        },
+        {
+          id: "hanging-leg-raises",
+          name: "Hanging Leg Raises + Dead Hang Decompression",
+          targetArea: "Spinal Traction & Lower Abdominals",
+          svg: "legraise",
+          isBodyweight: true,
+          setsCount: 2,
+          reps: 15,
+          weightKg: 0,
+          restSeconds: 60,
+          cue: "Relax shoulders at the bottom for 3s between reps to let gravity decompress your lumbar discs."
+        }
+      ]
+    };
+
+    async function callGeminiStructuredRoutine(userQuery) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const systemPrompt = `You are an elite Sports Physical Therapist and Hybrid Strength Coach. The user is asking for exercises or a workout routine (often for mobility, back pain, hip tightness from office sitting, or specific strength goals).
+      Return a structured JSON object containing:
+      1. routineTitle: Concise name of the workout.
+      2. routineFocus: Target muscles/systems.
+      3. biomechanicalWhy: A clear 2-3 sentence biomechanical explanation of why these movements solve their issue (e.g. how tight psoas/rectus femoris and dormant glutes cause lumbar tension).
+      4. exercises: Array of 4 to 5 specific exercises with id (kebab-case), name, targetArea, svg (choose one of: 'mobility', 'glute', 'squat', 'rdl', 'bench', 'pullup', 'legraise'), isBodyweight (boolean), setsCount (integer 2-4), reps (integer), weightKg (number, 0 if bodyweight), restSeconds (integer 45-120), and cue (1 concise form tip).`;
+
+      const payload = {
+        contents: [{ parts: [{ text: `Athlete Garmin HRV: ${garminMetrics.hrv}ms, Readiness: ${garminMetrics.readiness}/100. User Request: ${userQuery}` }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              routineTitle: { type: "STRING" },
+              routineFocus: { type: "STRING" },
+              biomechanicalWhy: { type: "STRING" },
+              exercises: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    id: { type: "STRING" },
+                    name: { type: "STRING" },
+                    targetArea: { type: "STRING" },
+                    svg: { type: "STRING" },
+                    isBodyweight: { type: "BOOLEAN" },
+                    setsCount: { type: "INTEGER" },
+                    reps: { type: "INTEGER" },
+                    weightKg: { type: "NUMBER" },
+                    restSeconds: { type: "INTEGER" },
+                    cue: { type: "STRING" }
+                  },
+                  required: ["id", "name", "targetArea", "svg", "isBodyweight", "setsCount", "reps", "weightKg", "restSeconds", "cue"]
+                }
+              }
+            },
+            required: ["routineTitle", "routineFocus", "biomechanicalWhy", "exercises"]
+          }
+        }
+      };
+
+      const delays = [1000, 2000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('Structured API failed');
+          const data = await res.json();
+          const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawJson) {
+            return JSON.parse(rawJson);
+          }
+        } catch (err) {
+          if (attempt === delays.length) return null;
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+      return null;
+    }
+
+    async function generateAiAdaptiveWorkout(promptText) {
+      const outputEl = document.getElementById('aiCoachOutput');
+      outputEl.innerHTML = `
+        <div class="flex items-center gap-2.5 text-indigo-300 animate-pulse py-2">
+          <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+          <span class="font-semibold">Designing biomechanical routine for: "${promptText}"...</span>
+        </div>
+      `;
+      lucide.createIcons();
+
+      let routineData = await callGeminiStructuredRoutine(promptText);
+      if (!routineData || !Array.isArray(routineData.exercises) || routineData.exercises.length === 0) {
+        routineData = JSON.parse(JSON.stringify(FALLBACK_OFFICE_HIP_BACK_ROUTINE));
+      }
+
+      lastAiGeneratedRoutine = routineData;
+      renderAiRoutineProposal(routineData);
+    }
+
+    function renderAiRoutineProposal(routine) {
+      const outputEl = document.getElementById('aiCoachOutput');
+
+      const cardsHtml = routine.exercises.map((ex, idx) => {
+        const thumb = SVG_THUMBNAILS[ex.svg] || SVG_THUMBNAILS.mobility;
+        const modeBadge = ex.isBodyweight
+          ? `<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">BW Only • ${ex.setsCount}×${ex.reps}</span>`
+          : `<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${ex.weightKg} kg • ${ex.setsCount}×${ex.reps}</span>`;
+
+        return `
+          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-2.5 flex items-start gap-2.5">
+            <div class="w-11 h-11 rounded-xl overflow-hidden border border-slate-700/80 flex-shrink-0">
+              ${thumb}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-1.5 flex-wrap">
+                <span class="font-extrabold text-xs text-white">${idx + 1}. ${ex.name}</span>
+                ${modeBadge}
+              </div>
+              <span class="text-[10px] text-amber-300 font-semibold block mt-0.5">${ex.targetArea}</span>
+              <p class="text-[11px] text-slate-400 mt-1 leading-snug">💡 ${ex.cue}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      outputEl.innerHTML = `
+        <div class="space-y-3">
+          <div class="border-b border-slate-800 pb-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">AI Custom Prescription</span>
+              <span class="text-[10px] font-mono text-slate-400">${routine.exercises.length} Exercises</span>
+            </div>
+            <h3 class="text-sm font-extrabold text-white mt-1.5">${routine.routineTitle}</h3>
+            <p class="text-[11px] text-indigo-300 font-medium">${routine.routineFocus}</p>
+          </div>
+
+          <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-2.5 text-[11px] text-slate-200 leading-relaxed">
+            <strong class="text-indigo-300 block mb-0.5">Why This Fixes "Office Body" & Back Tension:</strong>
+            ${routine.biomechanicalWhy}
+          </div>
+
+          <div class="space-y-2 max-h-72 overflow-y-auto pr-0.5">
+            ${cardsHtml}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="startAiGeneratedWorkoutNow()" class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-extrabold text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+              <span>Start This AI Workout Now</span>
+            </button>
+            <button onclick="saveAiRoutineToTemplates()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-emerald-300 border border-emerald-500/30 font-bold text-xs transition flex items-center justify-center gap-1.5">
+              <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
+              <span>Save to My Templates</span>
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function registerAiExercisesInLibrary(routine) {
+      const exerciseIds = [];
+      routine.exercises.forEach(ex => {
+        const cleanId = (ex.id || ex.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/^-|-$/g, '');
+        exerciseIds.push(cleanId);
+
+        const setsArr = [];
+        const count = Math.max(1, Math.min(6, parseInt(ex.setsCount) || 3));
+        for (let i = 0; i < count; i++) {
+          setsArr.push({
+            weight: ex.isBodyweight ? 0 : (parseFloat(ex.weightKg) || 20),
+            reps: parseInt(ex.reps) || 10
+          });
+        }
+
+        if (!exerciseLibrary[cleanId]) {
+          exerciseLibrary[cleanId] = {
+            id: cleanId,
+            name: ex.name,
+            muscle: ex.targetArea || 'Mobility & Core',
+            svg: SVG_THUMBNAILS[ex.svg] ? ex.svg : 'mobility',
+            isBodyweight: !!ex.isBodyweight,
+            restSeconds: parseInt(ex.restSeconds) || 60,
+            lastDaysAgo: 0,
+            lastBest: ex.isBodyweight ? `BW × ${ex.reps}` : `${ex.weightKg} kg × ${ex.reps}`,
+            defaultSets: setsArr
+          };
+        }
+      });
+      persistAll();
+      return exerciseIds;
+    }
+
+    function startAiGeneratedWorkoutNow() {
+      if (!lastAiGeneratedRoutine) return;
+      registerAiExercisesInLibrary(lastAiGeneratedRoutine);
+
+      activeSession.templateId = null;
+      activeSession.title = lastAiGeneratedRoutine.routineTitle;
+      activeSession.elapsedSeconds = 0;
+
+      activeSession.exercises = lastAiGeneratedRoutine.exercises.map(ex => {
+        const cleanId = (ex.id || ex.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/^-|-$/g, '');
+        const count = Math.max(1, Math.min(6, parseInt(ex.setsCount) || 3));
+        const w = ex.isBodyweight ? 0 : (parseFloat(ex.weightKg) || 20);
+        const r = parseInt(ex.reps) || 10;
+
+        const sets = [];
+        for (let i = 0; i < count; i++) {
+          sets.push({
+            weight: w,
+            reps: r,
+            prevRef: ex.isBodyweight ? `BW × ${r}` : `${w}kg × ${r}`,
+            completed: false,
+            overloaded: false
+          });
+        }
+
+        return {
+          id: cleanId,
+          name: ex.name,
+          muscle: ex.targetArea,
+          svg: SVG_THUMBNAILS[ex.svg] ? ex.svg : 'mobility',
+          isBodyweight: !!ex.isBodyweight,
+          restSeconds: parseInt(ex.restSeconds) || 60,
+          lastDaysAgo: 0,
+          lastBest: ex.isBodyweight ? `BW × ${r}` : `${w} kg × ${r}`,
+          sets
+        };
+      });
+
+      document.getElementById('activeWorkoutTitle').value = activeSession.title;
+      document.getElementById('activeWorkoutDot').classList.remove('hidden');
+      startWorkoutClock();
+      navigateTo('workout');
+      showToast(`Started "${lastAiGeneratedRoutine.routineTitle}"!`);
+    }
+
+    function saveAiRoutineToTemplates() {
+      if (!lastAiGeneratedRoutine) return;
+      const exIds = registerAiExercisesInLibrary(lastAiGeneratedRoutine);
+
+      const newTpl = {
+        id: 'tpl-ai-' + Date.now(),
+        name: lastAiGeneratedRoutine.routineTitle,
+        focus: lastAiGeneratedRoutine.routineFocus,
+        lastPerformed: 'AI Generated',
+        exerciseIds: exIds
+      };
+
+      templates.unshift(newTpl);
+      persistAll();
+      renderDashboardTemplates();
+      showToast(`Saved "${newTpl.name}" to your workout templates!`);
+    }
+
+    async function callGeminiCoach(systemPrompt, userQuery) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+      };
+
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('API request failed');
+          const data = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text;
+        } catch (err) {
+          if (attempt === delays.length) {
+            return null;
+          }
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+      return null;
+    }
+
+    async function generateAiBriefing() {
+      const outputEl = document.getElementById('aiCoachOutput');
+      outputEl.innerHTML = `<p class="text-indigo-300 animate-pulse font-semibold">Analyzing Garmin HRV (${garminMetrics.hrv} ms), Z4/Z5 Threshold load (${garminMetrics.weeklyZ4Mins}m), and recent lift history...</p>`;
+
+      const sysPrompt = "You are an elite Hybrid Strength & Endurance Coach. Keep your response concise (max 3 short bullet points or 3 sentences), practical, and data-driven. Refer directly to the athlete's Garmin HRV, Zone 4/5 threshold running load, and specific +2.5kg progressive overload targets.";
+      const recentSummary = historyLog.slice(0, 3).map(h => `${h.title} (${h.summary})`).join('; ');
+      const query = `Athlete Metrics Today: Overnight HRV ${garminMetrics.hrv}ms (${garminMetrics.hrvStatus}), Resting HR ${garminMetrics.rhr}bpm, Readiness ${garminMetrics.readiness}/100, 7-Day Running ${garminMetrics.weeklyRunKm}km with ${garminMetrics.weeklyZ4Mins} mins in Zone 4/5 Threshold. Recent sessions: ${recentSummary}. Give today's training briefing and whether to push +2.5kg on compound lifts.`;
+
+      const aiResponse = await callGeminiCoach(sysPrompt, query);
+      if (aiResponse) {
+        outputEl.innerHTML = `<div class="space-y-1 text-slate-200">${formatSimpleMarkdown(aiResponse)}</div>`;
+      } else {
+        outputEl.innerHTML = `
+          <p class="text-indigo-300 font-bold">Coach Briefing (Offline Fallback):</p>
+          <ul class="list-disc pl-4 space-y-1 text-slate-300">
+            <li><strong>Green Light for +2.5 kg:</strong> Your HRV (${garminMetrics.hrv} ms) and Readiness (${garminMetrics.readiness}/100) show full autonomic recovery despite ${garminMetrics.weeklyZ4Mins} mins of Z4/Z5 threshold running.</li>
+            <li><strong>Session Pick:</strong> Ideal day for <em>Upper Body A</em> or <em>Lower Body & Core</em>—target +2.5 kg on your top set of Squat (102.5 kg) or Bench (87.5 kg).</li>
+          </ul>`;
+      }
+    }
+
+    async function askAiCoachCustom() {
+      const input = document.getElementById('aiCustomPrompt');
+      const question = input.value.trim();
+      if (!question) return;
+      input.value = '';
+
+      // Detect if the user is asking for exercises, a workout, mobility, back/hip relief, or office posture help
+      const lower = question.toLowerCase();
+      const wantsWorkoutOrExercises =
+        lower.includes('back') ||
+        lower.includes('hip') ||
+        lower.includes('office') ||
+        lower.includes('tight') ||
+        lower.includes('tension') ||
+        lower.includes('pain') ||
+        lower.includes('sore') ||
+        lower.includes('workout') ||
+        lower.includes('exercise') ||
+        lower.includes('routine') ||
+        lower.includes('mobility') ||
+        lower.includes('stretch');
+
+      if (wantsWorkoutOrExercises) {
+        await generateAiAdaptiveWorkout(question);
+        return;
+      }
+
+      const outputEl = document.getElementById('aiCoachOutput');
+      outputEl.innerHTML = `<p class="text-indigo-300 animate-pulse font-semibold">Thinking about: "${question}"...</p>`;
+
+      const sysPrompt = "You are a concise Hybrid Strength & Garmin Endurance Coach. Answer the user's question in 2-4 crisp sentences using their biometrics and lifting context.";
+      const query = `Context: HRV ${garminMetrics.hrv}ms, RHR ${garminMetrics.rhr}bpm, Readiness ${garminMetrics.readiness}/100, Weekly Z4/Z5 Run ${garminMetrics.weeklyZ4Mins}m (${garminMetrics.weeklyRunKm}km). User asks: ${question}`;
+
+      const aiResponse = await callGeminiCoach(sysPrompt, query);
+      if (aiResponse) {
+        outputEl.innerHTML = `<div class="space-y-1 text-slate-200">${formatSimpleMarkdown(aiResponse)}</div>`;
+      } else {
+        outputEl.innerHTML = `<p class="text-slate-300">Based on your ${garminMetrics.hrv} ms HRV and ${garminMetrics.weeklyZ4Mins} mins of threshold running, prioritize progressive overload (+2.5 kg) on your first compound movement while keeping 1–2 reps in reserve (RIR) to protect running recovery.</p>`;
+      }
+    }
+
+    function formatSimpleMarkdown(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n- /g, '<br>• ')
+        .replace(/\n\* /g, '<br>• ');
+    }
+
+    // Finish Workout, Update Smart Prefills, and Run Post-Workout AI Effort Analysis
+    async function finishAndAnalyzeWorkout() {
+      let sessionTonnage = 0;
+      let completedSets = 0;
+      let overloadedSets = 0;
+      const liftSummaries = [];
+
+      activeSession.exercises.forEach(ex => {
+        let bestWeight = 0;
+        let bestReps = 0;
+        let anyDone = false;
+
+        ex.sets.forEach(s => {
+          if (s.completed) {
+            anyDone = true;
+            completedSets++;
+            if (s.overloaded) overloadedSets++;
+            if (!ex.isBodyweight) {
+              sessionTonnage += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0);
+              if (parseFloat(s.weight) >= bestWeight) {
+                bestWeight = parseFloat(s.weight);
+                bestReps = parseInt(s.reps);
+              }
+            } else {
+              bestReps = Math.max(bestReps, parseInt(s.reps));
+            }
+          }
+        });
+
+        // Update master library prefill for next workout!
+        if (anyDone) {
+          const summaryStr = ex.isBodyweight ? `BW × ${bestReps}` : `${bestWeight} kg × ${bestReps}`;
+          liftSummaries.push(`${ex.name}: ${summaryStr}`);
+
+          if (exerciseLibrary[ex.id]) {
+            exerciseLibrary[ex.id].lastDaysAgo = 0;
+            exerciseLibrary[ex.id].lastBest = summaryStr;
+            exerciseLibrary[ex.id].defaultSets = ex.sets.map(s => ({
+              weight: s.weight,
+              reps: s.reps
+            }));
+          }
+        }
+      });
+
+      if (completedSets === 0) {
+        showToast('Check off at least one set (✓) before finishing!');
+        return;
+      }
+
+      const title = document.getElementById('activeWorkoutTitle').value.trim() || activeSession.title;
+      if (activeSession.templateId) {
+        const tpl = templates.find(t => t.id === activeSession.templateId);
+        if (tpl) tpl.lastPerformed = 'Today';
+      }
+
+      historyLog.unshift({
+        date: 'Just now',
+        title,
+        type: 'strength',
+        tonnage: sessionTonnage,
+        summary: liftSummaries.join(' • ')
+      });
+
+      // Sync to Supabase Cloud if logged in
+      syncCompletedWorkoutToSupabase(title, sessionTonnage, liftSummaries.join(' • '), activeSession.exercises);
+
+      hideRestTimer();
+      clearInterval(workoutTimerInterval);
+      document.getElementById('activeWorkoutDot').classList.add('hidden');
+      persistAll();
+
+      // Open Post-Workout AI Modal
+      const modal = document.getElementById('postWorkoutAiModal');
+      document.getElementById('postWorkoutStatsStrip').innerHTML = `
+        <div>
+          <span class="text-[10px] uppercase text-slate-400 block">Total Tonnage</span>
+          <span class="font-mono text-sm font-extrabold text-emerald-400">${sessionTonnage.toLocaleString()} kg</span>
+        </div>
+        <div>
+          <span class="text-[10px] uppercase text-slate-400 block">Sets Logged</span>
+          <span class="font-mono text-sm font-extrabold text-white">${completedSets} sets</span>
+        </div>
+        <div>
+          <span class="text-[10px] uppercase text-slate-400 block">+2.5kg Overload</span>
+          <span class="font-mono text-sm font-extrabold text-amber-400">${overloadedSets} sets</span>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+
+      const aiBox = document.getElementById('postWorkoutAiText');
+      aiBox.innerHTML = `<p class="text-indigo-300 animate-pulse">Gemini Coach is analyzing your ${sessionTonnage.toLocaleString()} kg session effort...</p>`;
+
+      const sysPrompt = "You are an encouraging, analytical Hybrid Strength & Endurance Coach. Summarize the athlete's just-completed workout in 3 short sentences: highlight their tonnage and progressive overload, estimate recovery impact alongside their Garmin running load, and give 1 post-workout recovery tip.";
+      const query = `Workout Completed: "${title}". Total Tonnage: ${sessionTonnage} kg across ${completedSets} sets (${overloadedSets} progressive overload sets). Lifts: ${liftSummaries.join(', ')}. Athlete Garmin HRV: ${garminMetrics.hrv}ms, Weekly Z4/Z5 Run: ${garminMetrics.weeklyZ4Mins} mins.`;
+
+      const analysis = await callGeminiCoach(sysPrompt, query);
+      if (analysis) {
+        aiBox.innerHTML = `<div class="space-y-1.5">${formatSimpleMarkdown(analysis)}</div>`;
+      } else {
+        aiBox.innerHTML = `
+          <p class="font-bold text-indigo-300">Effort & Recovery Summary:</p>
+          <p>Strong execution on <strong>${title}</strong> totaling <strong>${sessionTonnage.toLocaleString()} kg</strong> across ${completedSets} working sets (${overloadedSets} sets with +2.5 kg overload).</p>
+          <p>Your new working weights are saved as the automatic prefill for your next session. Aim for 40g protein + 60g carbs within 60 minutes to keep tomorrow's Garmin HRV balanced.</p>
+        `;
+      }
+    }
+
+    function closePostWorkoutAiModal() {
+      const modal = document.getElementById('postWorkoutAiModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      navigateTo('analytics');
+    }
+
+    function openTemplateBuilderModal() {
+      const list = document.getElementById('builderLibraryCheckboxes');
+      list.innerHTML = Object.values(exerciseLibrary).map(ex => `
+        <label class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 cursor-pointer hover:border-slate-700">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" value="${ex.id}" class="tpl-ex-check accent-emerald-500 w-4 h-4 rounded" />
+            <div>
+              <span class="text-xs font-bold text-white block">${ex.name}</span>
+              <span class="text-[10px] text-slate-400">${ex.muscle} • Last: ${ex.lastBest}</span>
+            </div>
+          </div>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${ex.isBodyweight ? 'bg-sky-500/15 text-sky-300' : 'bg-slate-800 text-slate-300'}">
+            ${ex.isBodyweight ? 'BW' : 'kg'}
+          </span>
+        </label>
+      `).join('');
+
+      const modal = document.getElementById('templateBuilderModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTemplateBuilderModal() {
+      const modal = document.getElementById('templateBuilderModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function addCustomExerciseToLibrary() {
+      const name = document.getElementById('customLibExName').value.trim();
+      const mode = document.getElementById('customLibExMode').value;
+      if (!name) {
+        showToast('Enter an exercise name first!');
+        return;
+      }
+      const id = 'custom-' + Date.now();
+      const isBw = mode === 'bodyweight';
+      exerciseLibrary[id] = {
+        id,
+        name,
+        muscle: isBw ? 'Core / Bodyweight' : 'Custom • Weighted',
+        svg: isBw ? 'legraise' : 'bench',
+        isBodyweight: isBw,
+        restSeconds: isBw ? 60 : 90,
+        lastDaysAgo: 0,
+        lastBest: isBw ? 'BW × 15' : '40 kg × 8',
+        defaultSets: isBw
+          ? [{ weight: 0, reps: 15 }, { weight: 0, reps: 15 }]
+          : [{ weight: 40, reps: 8 }, { weight: 40, reps: 8 }, { weight: 40, reps: 8 }]
+      };
+      document.getElementById('customLibExName').value = '';
+      persistAll();
+      openTemplateBuilderModal();
+      showToast(`Added "${name}" to library!`);
+    }
+
+    function saveNewTemplate(launchImmediately) {
+      const name = document.getElementById('builderTemplateName').value.trim() || 'Custom Hybrid Routine';
+      const focus = document.getElementById('builderTemplateFocus').value.trim() || 'Full Body & Core';
+      const checked = Array.from(document.querySelectorAll('.tpl-ex-check:checked')).map(cb => cb.value);
+
+      if (checked.length === 0) {
+        showToast('Select at least 1 exercise for your template!');
+        return;
+      }
+
+      const newTpl = {
+        id: 'tpl-' + Date.now(),
+        name,
+        focus,
+        lastPerformed: 'New',
+        exerciseIds: checked
+      };
+
+      templates.unshift(newTpl);
+      persistAll();
+      closeTemplateBuilderModal();
+      renderDashboardTemplates();
+
+      if (launchImmediately) {
+        loadTemplateIntoActiveSession(newTpl.id, true);
+      } else {
+        showToast(`Saved routine "${name}"!`);
+      }
+    }
+
+    function openAddExerciseToActiveModal() {
+      const select = document.getElementById('activePickLibrarySelect');
+      select.innerHTML = `<option value="">-- Choose from saved library --</option>` +
+        Object.values(exerciseLibrary).map(ex => `<option value="${ex.id}">${ex.name} (${ex.lastBest})</option>`).join('');
+      const modal = document.getElementById('addActiveExModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAddExerciseToActiveModal() {
+      const modal = document.getElementById('addActiveExModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function populateActiveModalFromLibrary() {
+      const id = document.getElementById('activePickLibrarySelect').value;
+      if (!id || !exerciseLibrary[id]) return;
+      const ex = exerciseLibrary[id];
+      document.getElementById('activeCustomExName').value = ex.name;
+      document.getElementById('activeCustomExMode').value = ex.isBodyweight ? 'bodyweight' : 'weighted';
+      document.getElementById('activeCustomExMuscle').value = ex.muscle;
+      document.getElementById('activeCustomExWeight').value = ex.defaultSets[0]?.weight || 0;
+      document.getElementById('activeCustomExReps').value = ex.defaultSets[0]?.reps || 10;
+    }
+
+    function confirmAddExerciseToActive() {
+      const name = document.getElementById('activeCustomExName').value.trim() || 'Bonus Exercise';
+      const isBw = document.getElementById('activeCustomExMode').value === 'bodyweight';
+      const muscle = document.getElementById('activeCustomExMuscle').value.trim() || 'Hybrid';
+      const w = isBw ? 0 : (parseFloat(document.getElementById('activeCustomExWeight').value) || 20);
+      const r = parseInt(document.getElementById('activeCustomExReps').value) || 12;
+
+      const id = 'ex-' + Date.now();
+      activeSession.exercises.push({
+        id,
+        name,
+        muscle,
+        svg: isBw ? 'legraise' : 'bench',
+        isBodyweight: isBw,
+        restSeconds: isBw ? 60 : 90,
+        lastDaysAgo: 5,
+        lastBest: isBw ? `BW × ${r}` : `${w} kg × ${r}`,
+        sets: [
+          { weight: w, reps: r, prevRef: isBw ? `BW × ${r}` : `${w}kg × ${r}`, completed: false, overloaded: false },
+          { weight: w, reps: r, prevRef: isBw ? `BW × ${r}` : `${w}kg × ${r}`, completed: false, overloaded: false }
+        ]
+      });
+
+      closeAddExerciseToActiveModal();
+      renderActiveWorkout();
+      showToast(`Added ${name} to active workout!`);
+    }
+
+    // Garmin Sync & Run Logging
+    function syncGarmin() {
+      const icon = document.getElementById('syncIcon');
+      const text = document.getElementById('syncText');
+      icon.classList.add('animate-spin');
+      text.textContent = 'Syncing...';
+
+      setTimeout(() => {
+        icon.classList.remove('animate-spin');
+        text.textContent = 'Synced';
+        garminMetrics.hrv = 70;
+        garminMetrics.readiness = 85;
+        document.getElementById('garminSyncBadge').textContent = 'Garmin Synced • Just now';
+        updateGarminUI();
+        persistAll();
+        showToast('Garmin Connect synced: HRV 70 ms, Readiness 85/100');
+      }, 600);
+    }
+
+    function openRunModal() {
+      const modal = document.getElementById('runModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRunModal() {
+      const modal = document.getElementById('runModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveGarminRun() {
+      const title = document.getElementById('runTitleInput').value.trim() || 'Threshold Run';
+      const km = parseFloat(document.getElementById('runKmInput').value) || 8.0;
+      const hr = parseInt(document.getElementById('runAvgHrInput').value) || 170;
+      const z4 = parseInt(document.getElementById('runZ4MinsInput').value) || 20;
+
+      garminMetrics.weeklyRunKm = +(garminMetrics.weeklyRunKm + km).toFixed(1);
+      garminMetrics.weeklyZ4Mins += z4;
+
+      historyLog.unshift({
+        date: 'Just now (Garmin)',
+        title: `${title} • ${km.toFixed(1)} km`,
+        type: 'run',
+        tonnage: 0,
+        summary: `Avg HR ${hr} bpm • ${z4}m in Zone 4/5 Threshold`
+      });
+
+      persistAll();
+      updateGarminUI();
+      closeRunModal();
+      showToast(`Logged ${km} km run (+${z4}m Threshold HR)`);
+    }
+
+    function renderAnalyticsView() {
+      document.getElementById('analyticsThresholdMins').textContent = `${garminMetrics.weeklyZ4Mins} mins`;
+      document.getElementById('analyticsSessionsCount').textContent = historyLog.length;
+
+      const listEl = document.getElementById('completedHistoryList');
+      listEl.innerHTML = historyLog.map(item => `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold ${item.type === 'run' ? 'text-amber-300' : 'text-white'}">${item.title}</span>
+              <span class="text-[10px] font-mono text-slate-400">${item.date}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">${item.summary}</p>
+          </div>
+          ${item.tonnage > 0
+            ? `<span class="font-mono text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-xl flex-shrink-0">${item.tonnage.toLocaleString()} kg</span>`
+            : `<span class="font-mono text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-xl flex-shrink-0">Garmin Z4</span>`
+          }
+        </div>
+      `).join('');
+
+      const ctxH = document.getElementById('chartHybrid').getContext('2d');
+      if (chartHybridInstance) chartHybridInstance.destroy();
+
+      chartHybridInstance = new Chart(ctxH, {
+        type: 'bar',
+        data: {
+          labels: ['Wk -3', 'Wk -2', 'Last Wk', 'This Wk'],
+          datasets: [
+            {
+              label: 'Strength Tonnage (kg)',
+              data: [12800, 13600, 14100, 14850],
+              backgroundColor: 'rgba(16, 185, 129, 0.75)',
+              borderRadius: 6,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Threshold HR Z4/Z5 (mins)',
+              data: [34, 38, 36, garminMetrics.weeklyZ4Mins],
+              type: 'line',
+              borderColor: '#f59e0b',
+              backgroundColor: '#f59e0b',
+              borderWidth: 2.5,
+              tension: 0.35,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { position: 'left', ticks: { color: '#34d399', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.25)' } },
+            y1: { position: 'right', ticks: { color: '#fbbf24', font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+
+      render1RMChart();
+    }
+
+    function render1RMChart() {
+      const exName = document.getElementById('select1RMExercise').value;
+      const curves = {
+        'Barbell Back Squat': [110, 113, 115, 117, 120],
+        'Bench Press': [96, 98, 100, 102, 105],
+        'Romanian Deadlift': [106, 109, 112, 114, 117],
+        'Trap Bar Deadlift': [144, 147, 150, 152, 155]
+      };
+
+      const ctx1 = document.getElementById('chart1RM').getContext('2d');
+      if (chart1RMInstance) chart1RMInstance.destroy();
+
+      chart1RMInstance = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: ['4 Wks Ago', '3 Wks Ago', '2 Wks Ago', 'Last Wk', 'Current Est.'],
+          datasets: [{
+            label: `${exName} Est. 1RM (kg)`,
+            data: curves[exName] || [100, 102, 105, 108, 110],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4,
+            pointBackgroundColor: '#34d399'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(51,65,85,0.25)' } }
+          }
+        }
+      });
+    }
+
+    function resetAllStorage() {
+      localStorage.removeItem(getStorageKey('hf_library'));
+      localStorage.removeItem(getStorageKey('hf_templates'));
+      localStorage.removeItem(getStorageKey('hf_history'));
+      localStorage.removeItem(getStorageKey('hf_garmin'));
+      loadUserProfileState(activeUserId);
+      renderDashboardTemplates();
+      updateGarminUI();
+      renderAnalyticsView();
+      showToast('Reset current profile demo data!');
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      document.getElementById('toastMessage').textContent = msg;
+      banner.classList.remove('-translate-y-24', 'opacity-0');
+      setTimeout(() => {
+        banner.classList.add('-translate-y-24', 'opacity-0');
+      }, 2400);
+    }
+
+    window.onload = function () {
+      initSupabaseClient();
+      updateProfileHeaderUI();
+      renderDashboardTemplates();
+      updateGarminUI();
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
+```
